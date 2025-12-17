@@ -5,11 +5,11 @@ import java.awt.*;
 
 /**
  * Panel de control con información del juego
+ * Muestra el estado actual del turno, fase y piezas
  */
 public class PanelControl extends JPanel {
 
     private JLabel lblTurno;
-    private JButton botonReiniciar;
 
     public PanelControl() {
         setLayout(new BorderLayout(10, 10));
@@ -25,22 +25,9 @@ public class PanelControl extends JPanel {
         panelInfo.add(lblTurno);
 
         add(panelInfo, BorderLayout.CENTER);
-
-        // Panel de botones
-        JPanel panelBotones = new JPanel(new FlowLayout());
-        panelBotones.setBackground(new Color(240, 240, 240));
-
-        botonReiniciar = new JButton("Reiniciar");
-        panelBotones.add(botonReiniciar);
-
-        add(panelBotones, BorderLayout.SOUTH);
     }
 
     public void setTurnoTexto(String texto) {
         lblTurno.setText(texto);
-    }
-
-    public JButton getBotonReiniciar() {
-        return botonReiniciar;
     }
 }

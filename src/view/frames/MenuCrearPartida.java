@@ -107,9 +107,9 @@ public class MenuCrearPartida extends JFrame {
             controlador.getVista().setEstado(Estados.EN_ESPERANDO_JUGADORES);
             System.out.println("[MenuCrearPartida-" + controlador.getNombreJugador() + "] Estado cambiado a EN_ESPERANDO_JUGADORES");
 
-            // Crear la ventana de juego
-            String nombreJ1 = controlador.getNombreJugador();
+            // Crear la ventana de juego pero NO mostrarla todavía
             String vista = (String) comboVista.getSelectedItem();
+            String nombreJ1 = controlador.getNombreJugador();
 
             if ("Gráfica".equals(vista)) {
                 VentanaPrincipal ventana = new VentanaPrincipal(nombreJ1, true, controlador);
@@ -117,20 +117,20 @@ public class MenuCrearPartida extends JFrame {
                 if (controlador.getVista() instanceof view.vistas.VistaGrafica) {
                     ((view.vistas.VistaGrafica) controlador.getVista()).setVentanaPrincipal(ventana);
                 }
-                ventana.setVisible(true);
+                // NO hacer visible todavía - se mostrará cuando se una el segundo jugador
             } else {
                 VentanaConsola consola = new VentanaConsola(nombreJ1, true, controlador);
                 // Registrar en VistaGrafica
                 if (controlador.getVista() instanceof view.vistas.VistaGrafica) {
                     ((view.vistas.VistaGrafica) controlador.getVista()).setVentanaConsola(consola);
                 }
-                consola.setVisible(true);
+                // NO hacer visible todavía - se mostrará cuando se una el segundo jugador
             }
 
-            // Mostrar sala de espera
+            // Mostrar sala de espera (ahora se ejecuta sincrónicamente)
             controlador.getVista().salaEspera();
 
-            // Cerrar este menú
+            // Cerrar este menú después de que la sala de espera esté visible
             dispose();
 
         } catch (RemoteException e) {

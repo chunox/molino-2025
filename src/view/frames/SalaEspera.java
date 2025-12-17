@@ -5,6 +5,8 @@ import model.interfaces.IPartida;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.rmi.RemoteException;
 
 /**
@@ -82,9 +84,16 @@ public class SalaEspera extends JFrame {
         panelBotones.add(btnCancelar);
         add(panelBotones, BorderLayout.SOUTH);
 
-        // Timer para verificar si el segundo jugador se unió
-        timer = new Timer(1000, e -> verificarJugadores());
-        timer.start();
+        // Iniciar timer solo cuando la ventana sea visible
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                // Timer para verificar si el segundo jugador se unió
+                timer = new Timer(1000, evt -> verificarJugadores());
+                timer.start();
+                System.out.println("[SalaEspera-" + controlador.getNombreJugador() + "] Sala de espera visible, timer iniciado");
+            }
+        });
     }
 
     private void verificarJugadores() {
@@ -100,8 +109,9 @@ public class SalaEspera extends JFrame {
                     timer.stop();
                     System.out.println("[SalaEspera-" + controlador.getNombreJugador() + "] ¡Segundo jugador detectado! Cerrando sala...");
 
-                    // Cambiar estado a EN_JUEGO
+                    // Cambiar estado a EN_JUEGO y mostrar la partida
                     controlador.getVista().setEstado(model.enums.Estados.EN_JUEGO);
+                    controlador.getVista().mostrarPartida();
 
                     // Cerrar sala de espera sin pop-up
                     dispose();

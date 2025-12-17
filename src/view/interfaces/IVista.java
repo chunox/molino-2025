@@ -8,7 +8,6 @@ import java.rmi.RemoteException;
  * Interfaz para las vistas del juego
  */
 public interface IVista {
-    void login();
     void menu();
     void mostrarPartida() throws RemoteException;
     void mostrarGameOver();

@@ -174,11 +174,21 @@ public class ListaPartidas extends JFrame {
 
             System.out.println("[ListaPartidas-" + controlador.getNombreJugador() + "] Uniéndose a Lobby #" + idPartida);
 
-            // Unirse a la partida
-            controlador.unirseAPartida(idPartida);
-            controlador.setEsJugador1(false);
-
-            System.out.println("[ListaPartidas-" + controlador.getNombreJugador() + "] Unido exitosamente, cambiando estado a EN_JUEGO");
+            // Unirse a la partida (puede lanzar IllegalStateException si hay problemas)
+            try {
+                controlador.unirseAPartida(idPartida);
+                controlador.setEsJugador1(false);
+                System.out.println("[ListaPartidas-" + controlador.getNombreJugador() + "] Unido exitosamente, cambiando estado a EN_JUEGO");
+            } catch (IllegalStateException e) {
+                // Error de validación (partida llena, no disponible, etc.)
+                JOptionPane.showMessageDialog(this,
+                        "No se puede unir a la partida:\n" + e.getMessage(),
+                        "Error al Unirse",
+                        JOptionPane.ERROR_MESSAGE);
+                // Refrescar la lista de partidas
+                cargarPartidas();
+                return;
+            }
 
             // Cambiar estado a EN_JUEGO
             controlador.getVista().setEstado(Estados.EN_JUEGO);

@@ -19,9 +19,7 @@ public enum Eventos {
 
     // Eventos de conexión
     DESCONEXION_E,      // Desconexión en espera
-    RECONEXION_E,       // Reconexión en espera
     DESCONEXION_J,      // Desconexión en juego
-    RECONEXION_J,       // Reconexión en juego
 
     // Eventos de finalización
     GAME_OVER,

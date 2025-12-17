@@ -36,6 +36,14 @@ public class VentanaPrincipal extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
+        // Detectar cuando se cierra la ventana para desconectar automáticamente
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                desconectarAlCerrar();
+            }
+        });
+
         // Panel del tablero
         panelTablero = new PanelTablero();
         panelTablero.setControlador(controlador);
@@ -44,7 +52,6 @@ public class VentanaPrincipal extends JFrame {
 
         // Panel de control
         panelControl = new PanelControl();
-        panelControl.getBotonReiniciar().addActionListener(e -> reiniciarJuego());
         add(panelControl, BorderLayout.SOUTH);
 
         // Actualizar vista inicial
@@ -55,6 +62,12 @@ public class VentanaPrincipal extends JFrame {
         try {
             IPartida partida = controlador.getPartidaActual();
             if (partida == null || partida.hayGanador()) {
+                return;
+            }
+
+            // Verificar que haya 2 jugadores antes de procesar clics
+            if (partida.getJugadores().size() < 2) {
+                mostrarMensajeError("Esperando que se una el segundo jugador");
                 return;
             }
 
@@ -143,6 +156,13 @@ public class VentanaPrincipal extends JFrame {
                 IPartida partida = controlador.getPartidaActual();
                 if (partida == null) return;
 
+                // Si no hay suficientes jugadores, mostrar mensaje de espera
+                if (partida.getJugadores().size() < 2) {
+                    panelControl.setTurnoTexto("Esperando que se una el segundo jugador...");
+                    repaint();
+                    return;
+                }
+
                 boolean esTurnoJugador1 = (partida.getJugadorActual() == partida.getJugadores().get(0));
                 String indicadorTurno = (esJugador1 == esTurnoJugador1) ? "TU TURNO" : "Turno del oponente";
 
@@ -170,6 +190,11 @@ public class VentanaPrincipal extends JFrame {
     }
 
     private void actualizarTablero(IPartida partida) throws RemoteException {
+        // Solo actualizar si hay 2 jugadores en la partida
+        if (partida.getJugadores().size() < 2) {
+            return;
+        }
+
         java.util.Map<String, IJugador> estadoTablero = partida.getEstadoTablero();
         IJugador j1 = partida.getJugadores().get(0);
         IJugador j2 = partida.getJugadores().get(1);
@@ -185,31 +210,30 @@ public class VentanaPrincipal extends JFrame {
         System.out.println("Error: " + mensaje);
     }
 
+    /**
+     * MOSTRAR GANADOR
+     *
+     * Muestra un mensaje informativo cuando hay un ganador.
+     * La partida queda finalizada y los jugadores deben volver al menú
+     * para crear una nueva partida.
+     */
     private void mostrarGanador(IPartida partida) {
         try {
             IJugador ganador = partida.getGanador();
-            String mensaje = "🎉 ¡" + ganador.getNombre() + " ha ganado el juego! 🎉";
-            int opcion = JOptionPane.showConfirmDialog(
+            String mensaje = "🎉 ¡" + ganador.getNombre() + " ha ganado el juego! 🎉\n\n" +
+                           "La partida ha finalizado.\n" +
+                           "Puedes cerrar esta ventana y volver al menú principal\n" +
+                           "para crear una nueva partida.";
+
+            JOptionPane.showMessageDialog(
                     this,
-                    mensaje + "\n\n¿Deseas jugar de nuevo?",
+                    mensaje,
                     "Fin del juego",
-                    JOptionPane.YES_NO_OPTION,
                     JOptionPane.INFORMATION_MESSAGE
             );
-
-            if (opcion == JOptionPane.YES_OPTION) {
-                reiniciarJuego();
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private void reiniciarJuego() {
-        JOptionPane.showMessageDialog(this,
-                "Para nueva partida, usa el menú principal",
-                "Información",
-                JOptionPane.INFORMATION_MESSAGE);
     }
 
     public PanelTablero getPanelTablero() {
@@ -218,5 +242,24 @@ public class VentanaPrincipal extends JFrame {
 
     public PanelControl getPanelControl() {
         return panelControl;
+    }
+
+    /**
+     * DESCONECTAR AL CERRAR
+     *
+     * Este método se invoca cuando el jugador cierra la ventana.
+     * Notifica al servidor que el jugador se ha desconectado, lo que
+     * resulta en:
+     * - Si está en lobby (EN_ESPERA): Se elimina del lobby
+     * - Si está en juego (EN_JUEGO): El oponente gana automáticamente
+     */
+    private void desconectarAlCerrar() {
+        try {
+            System.out.println("[VentanaPrincipal] Desconectando jugador: " + nombreJugador);
+            controlador.desconectar();
+        } catch (Exception e) {
+            System.err.println("[VentanaPrincipal] Error al desconectar: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

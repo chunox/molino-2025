@@ -124,16 +124,45 @@ public class VentanaConsola extends JFrame {
                 return;
             }
 
+            // Comandos que no requieren verificación de jugadores
+            switch (cmd) {
+                case "help", "ayuda", "?" -> {
+                    mostrarAyuda();
+                    return;
+                }
+                case "estado", "status" -> {
+                    mostrarEstado();
+                    return;
+                }
+                case "tablero", "board" -> {
+                    mostrarTablero();
+                    return;
+                }
+                case "mt", "mapa" -> {
+                    mostrarMapaPosiciones();
+                    return;
+                }
+                case "limpiar", "clear", "cls" -> {
+                    limpiarConsola();
+                    return;
+                }
+                case "salir", "exit" -> {
+                    dispose();
+                    return;
+                }
+            }
+
+            // Para comandos de juego, verificar que haya 2 jugadores
+            if (partida.getJugadores().size() < 2) {
+                escribir("ERROR: Esperando que se una el segundo jugador");
+                return;
+            }
+
             // Verificar turno
             boolean esTurnoJugador1 = (partida.getJugadorActual() == partida.getJugadores().get(0));
             boolean esMiTurno = (esJugador1 == esTurnoJugador1);
 
             switch (cmd) {
-                case "help", "ayuda", "?" -> mostrarAyuda();
-                case "estado", "status" -> mostrarEstado();
-                case "tablero", "board" -> mostrarTablero();
-                case "mt", "mapa" -> mostrarMapaPosiciones();
-                case "limpiar", "clear", "cls" -> limpiarConsola();
                 case "colocar", "place" -> {
                     if (!esMiTurno) {
                         escribir("ERROR: No es tu turno");
@@ -161,7 +190,6 @@ public class VentanaConsola extends JFrame {
                         eliminarPieza(partes[1].toUpperCase());
                     }
                 }
-                case "salir", "exit" -> dispose();
                 default -> escribir("Comando desconocido. Escribe 'ayuda' para ver comandos.");
             }
         } catch (RemoteException e) {
@@ -270,6 +298,16 @@ public class VentanaConsola extends JFrame {
             IPartida partida = controlador.getPartidaActual();
             if (partida == null) return;
 
+            // Solo mostrar estado completo si hay 2 jugadores
+            if (partida.getJugadores().size() < 2) {
+                escribir("+----------- ESPERANDO JUGADORES --------+");
+                escribir("| Jugador: " + padRight(nombreJugador, 29) + " |");
+                escribir("| Esperando que se una el segundo jugador|");
+                escribir("+----------------------------------------+");
+                escribir("");
+                return;
+            }
+
             boolean esTurnoJugador1 = (partida.getJugadorActual() == partida.getJugadores().get(0));
             boolean esMiTurno = (esJugador1 == esTurnoJugador1);
 
@@ -334,6 +372,11 @@ public class VentanaConsola extends JFrame {
         try {
             IPartida partida = controlador.getPartidaActual();
             if (partida == null) return;
+
+            // Solo mostrar tablero si hay al menos 1 jugador
+            if (partida.getJugadores().isEmpty()) {
+                return;
+            }
 
             areaTablero.setText("");
 

@@ -36,9 +36,8 @@ public interface IModelo extends IObservableRemoto {
     boolean hayGanador(int id) throws RemoteException;
     IJugador getGanador(int id) throws RemoteException;
 
-    // Persistencia
+    // Persistencia y desconexión
     void desconectarJugador(String nombre, int idPartida) throws RemoteException;
-    void reconectarJugador(String nombre, int idPartida) throws RemoteException;
     Map<Integer, IPartida> getPartidasGuardadas(String nombreJugador) throws RemoteException;
 
     // Ranking
