@@ -147,7 +147,8 @@ public class Partida implements IPartida, Serializable {
             return false;
         }
 
-        boolean puedeVolar = (faseActual == FaseJuego.VUELO);
+        // El jugador puede volar solo si tiene exactamente 3 piezas (individual, no global)
+        boolean puedeVolar = (jugadorActual.getPiezasEnTablero() == PIEZAS_PARA_VUELO);
 
         if (!tablero.moverPieza(origen, destino, jugadorActual, puedeVolar)) {
             return false;
@@ -215,16 +216,15 @@ public class Partida implements IPartida, Serializable {
     }
 
     private void actualizarFase() {
+        // Solo transición de COLOCACION a MOVIMIENTO cuando ambos jugadores terminan de colocar
         if (faseActual == FaseJuego.COLOCACION &&
                 jugadores.get(0).getPiezasColocadas() == PIEZAS_TOTALES_POR_JUGADOR &&
                 jugadores.get(1).getPiezasColocadas() == PIEZAS_TOTALES_POR_JUGADOR) {
             faseActual = FaseJuego.MOVIMIENTO;
         }
 
-        if (faseActual == FaseJuego.MOVIMIENTO &&
-                jugadorActual.getPiezasEnTablero() == PIEZAS_PARA_VUELO) {
-            faseActual = FaseJuego.VUELO;
-        }
+        // NOTA: La capacidad de VOLAR es individual por jugador (cuando tiene 3 piezas),
+        // no una fase global de la partida. Se verifica en moverPieza() y jugadorPuedeMoverse()
     }
 
     private void verificarCondicionesVictoria() {
@@ -247,8 +247,11 @@ public class Partida implements IPartida, Serializable {
     }
 
     private boolean jugadorPuedeMoverse(IJugador jugador) {
+        // Verificar si el jugador puede volar (tiene 3 piezas) - esto es INDIVIDUAL
+        boolean puedeVolar = (jugador.getPiezasEnTablero() == PIEZAS_PARA_VUELO);
+
         for (String posicion : tablero.getPosicionesOcupadasPor(jugador)) {
-            if (tablero.tieneMovimientosDisponibles(posicion, faseActual == FaseJuego.VUELO)) {
+            if (tablero.tieneMovimientosDisponibles(posicion, puedeVolar)) {
                 return true;
             }
         }

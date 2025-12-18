@@ -10,7 +10,9 @@
       "Bash(del \"C:\\Users\\domin\\IdeaProjects\\Elmolino\\src\\model\\excepciones\\PasswordIncorrecta.java\")",
       "Bash(del \"C:\\Users\\domin\\IdeaProjects\\Elmolino\\src\\model\\enums\\EstadoJugador.java\")",
       "Bash(rm:*)",
-      "Bash(javac:*)"
+      "Bash(javac:*)",
+      "Bash(where javac:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }
