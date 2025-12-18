@@ -14,7 +14,6 @@ public interface IPartida extends Serializable {
 
     List<IJugador> getJugadores();
     void agregarJugador(IJugador jugador);
-    void removerJugador(String nombreJugador);
 
     EstadoPartida getEstadoPartida();
     void setEstadoPartida(EstadoPartida estado);
@@ -36,9 +35,6 @@ public interface IPartida extends Serializable {
     boolean eliminarPiezaOponente(String posicion) throws RemoteException;
 
     boolean isEsperandoEliminar();
-
-    void setEstadoJugador(String nombreJugador, EstadoJugador estado);
-    EstadoJugador getEstadoJugador(String nombreJugador);
 
     // Método para obtener estado del tablero
     java.util.Map<String, IJugador> getEstadoTablero() throws RemoteException;

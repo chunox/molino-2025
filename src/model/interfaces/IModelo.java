@@ -1,10 +1,6 @@
 package model.interfaces;
 
 import ar.edu.unlu.rmimvc.observer.IObservableRemoto;
-import model.enums.EstadoJugador;
-import model.excepciones.JugadorExistente;
-import model.excepciones.JugadorNoExistente;
-import model.excepciones.PasswordIncorrecta;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Map;
@@ -16,15 +12,8 @@ import java.util.Map;
 public interface IModelo extends IObservableRemoto {
 
     // Gestión de partidas
-    IPartida crearPartida(String nombreJugador1, String nombreJugador2) throws RemoteException;
-    List<IPartida> getPartidas() throws RemoteException;
+    IPartida buscarPartida(String nombreJugador) throws RemoteException;
     IPartida getPartida(int id) throws RemoteException;
-    void empezarPartida(int id) throws RemoteException;
-    void agregarJugadorAPartida(int id, String nombreJugador) throws RemoteException;
-
-    // Gestión de jugadores
-    void registrarUsuario(String nombre, String password) throws RemoteException, JugadorExistente;
-    void iniciarSesion(String nombre, String password) throws RemoteException, JugadorNoExistente, PasswordIncorrecta;
 
     // Lógica del juego
     void colocarPieza(int idPartida, String posicion) throws RemoteException;
@@ -35,10 +24,6 @@ public interface IModelo extends IObservableRemoto {
     boolean verificarFinDelJuego(int id) throws RemoteException;
     boolean hayGanador(int id) throws RemoteException;
     IJugador getGanador(int id) throws RemoteException;
-
-    // Persistencia y desconexión
-    void desconectarJugador(String nombre, int idPartida) throws RemoteException;
-    Map<Integer, IPartida> getPartidasGuardadas(String nombreJugador) throws RemoteException;
 
     // Ranking
     Map<String, Integer> getRanking() throws RemoteException;

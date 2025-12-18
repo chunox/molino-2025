@@ -12,8 +12,7 @@ public interface IVista {
     void mostrarPartida() throws RemoteException;
     void mostrarGameOver();
     void mostrarGameWin() throws RemoteException;
-    void buscarPartidas() throws RemoteException;
-    void salaEspera() throws RemoteException;
+    void buscarPartida() throws RemoteException;
 
     Estados getEstado();
     void setEstado(Estados estado);

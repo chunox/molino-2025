@@ -13,8 +13,7 @@ import java.rmi.RemoteException;
 public class MenuPrincipal extends JFrame {
 
     private Controller controlador;
-    private JButton btnCrearPartida;
-    private JButton btnUnirsePartida;
+    private JButton btnBuscarPartida;
     private JButton btnVerRanking;
     private JButton btnSalir;
 
@@ -54,20 +53,12 @@ public class MenuPrincipal extends JFrame {
             gbc.gridy++;
         }
 
-        // Botón crear partida
-        btnCrearPartida = new JButton("Crear Nueva Partida");
-        btnCrearPartida.setFont(new Font("Arial", Font.BOLD, 14));
-        btnCrearPartida.setPreferredSize(new Dimension(250, 40));
-        btnCrearPartida.addActionListener(e -> abrirCrearPartida());
-        panelCentral.add(btnCrearPartida, gbc);
-        gbc.gridy++;
-
-        // Botón unirse a partida
-        btnUnirsePartida = new JButton("Unirse a Partida");
-        btnUnirsePartida.setFont(new Font("Arial", Font.BOLD, 14));
-        btnUnirsePartida.setPreferredSize(new Dimension(250, 40));
-        btnUnirsePartida.addActionListener(e -> abrirListaPartidas());
-        panelCentral.add(btnUnirsePartida, gbc);
+        // Botón buscar partida
+        btnBuscarPartida = new JButton("Buscar Partida");
+        btnBuscarPartida.setFont(new Font("Arial", Font.BOLD, 14));
+        btnBuscarPartida.setPreferredSize(new Dimension(250, 40));
+        btnBuscarPartida.addActionListener(e -> buscarPartida());
+        panelCentral.add(btnBuscarPartida, gbc);
         gbc.gridy++;
 
         // Botón ver ranking
@@ -88,26 +79,37 @@ public class MenuPrincipal extends JFrame {
         add(panelCentral, BorderLayout.CENTER);
     }
 
-    private void abrirCrearPartida() {
+    private void buscarPartida() {
         try {
-            MenuCrearPartida menuCrear = new MenuCrearPartida(controlador);
-            menuCrear.setVisible(true);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                "Error al abrir menú de crear partida: " + e.getMessage(),
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
-        }
-    }
+            // Preguntar al jugador qué tipo de vista prefiere
+            String[] opciones = {"Vista Gráfica", "Vista Consola"};
+            int seleccion = JOptionPane.showOptionDialog(
+                this,
+                "Selecciona el tipo de vista para el juego:",
+                "Tipo de Vista",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                opciones,
+                opciones[0]
+            );
 
-    private void abrirListaPartidas() {
-        try {
-            controlador.getVista().setEstado(Estados.EN_BUSCAR_PARTIDA);
-            controlador.getVista().buscarPartidas();
+            // Si el usuario cerró el diálogo, no hacer nada
+            if (seleccion == JOptionPane.CLOSED_OPTION) {
+                return;
+            }
+
+            // Establecer la preferencia de vista
+            boolean usarVistaGrafica = (seleccion == 0);
+            if (controlador.getVista() instanceof view.vistas.VistaGrafica) {
+                ((view.vistas.VistaGrafica) controlador.getVista()).setUsarVistaGrafica(usarVistaGrafica);
+            }
+
+            // Buscar partida automáticamente
+            controlador.getVista().buscarPartida();
         } catch (RemoteException e) {
             JOptionPane.showMessageDialog(this,
-                "Error al buscar partidas: " + e.getMessage(),
+                "Error al buscar partida: " + e.getMessage(),
                 "Error",
                 JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();

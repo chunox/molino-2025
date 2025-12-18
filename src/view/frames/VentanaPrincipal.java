@@ -36,14 +36,6 @@ public class VentanaPrincipal extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Detectar cuando se cierra la ventana para desconectar automáticamente
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-                desconectarAlCerrar();
-            }
-        });
-
         // Panel del tablero
         panelTablero = new PanelTablero();
         panelTablero.setControlador(controlador);
@@ -215,7 +207,7 @@ public class VentanaPrincipal extends JFrame {
      *
      * Muestra un mensaje informativo cuando hay un ganador.
      * La partida queda finalizada y los jugadores deben volver al menú
-     * para crear una nueva partida.
+     * para buscar una nueva partida.
      */
     private void mostrarGanador(IPartida partida) {
         try {
@@ -223,7 +215,7 @@ public class VentanaPrincipal extends JFrame {
             String mensaje = "🎉 ¡" + ganador.getNombre() + " ha ganado el juego! 🎉\n\n" +
                            "La partida ha finalizado.\n" +
                            "Puedes cerrar esta ventana y volver al menú principal\n" +
-                           "para crear una nueva partida.";
+                           "para buscar una nueva partida.";
 
             JOptionPane.showMessageDialog(
                     this,
@@ -244,22 +236,4 @@ public class VentanaPrincipal extends JFrame {
         return panelControl;
     }
 
-    /**
-     * DESCONECTAR AL CERRAR
-     *
-     * Este método se invoca cuando el jugador cierra la ventana.
-     * Notifica al servidor que el jugador se ha desconectado, lo que
-     * resulta en:
-     * - Si está en lobby (EN_ESPERA): Se elimina del lobby
-     * - Si está en juego (EN_JUEGO): El oponente gana automáticamente
-     */
-    private void desconectarAlCerrar() {
-        try {
-            System.out.println("[VentanaPrincipal] Desconectando jugador: " + nombreJugador);
-            controlador.desconectar();
-        } catch (Exception e) {
-            System.err.println("[VentanaPrincipal] Error al desconectar: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
 }

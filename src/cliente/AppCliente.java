@@ -45,7 +45,7 @@ import java.io.IOException;
  *        - El Controller se SUSCRIBE al Modelo como observador
  *        ↓
  *   [6] Se muestra el menú principal: vista.menu()
- *        - El jugador puede: crear partida, unirse, ver ranking
+ *        - El jugador puede: buscar partida (matchmaking automático), ver ranking
  *        ↓
  *   [7] A partir de aquí, el flujo es controlado por eventos:
  *        - Interacciones del usuario → Controller → Modelo (RMI)
@@ -82,7 +82,7 @@ import java.io.IOException;
  *
  * Cliente → Servidor (Llamadas RMI):
  *   - Usuario hace clic → Controller.metodo() → Modelo.metodo() [RMI]
- *   - Ejemplo: Colocar pieza, mover pieza, crear partida
+ *   - Ejemplo: Colocar pieza, mover pieza, buscar partida
  *
  * Servidor → Cliente (Notificaciones Observer):
  *   - Modelo cambia → notificarObservadores() → Controller.actualizar() [RMI]

@@ -5,9 +5,6 @@ import ar.edu.unlu.rmimvc.cliente.IControladorRemoto;
 import model.clases.ManejadorEventos;
 import model.enums.Estados;
 import model.enums.Eventos;
-import model.excepciones.JugadorExistente;
-import model.excepciones.JugadorNoExistente;
-import model.excepciones.PasswordIncorrecta;
 import model.interfaces.IModelo;
 import model.interfaces.IPartida;
 import model.interfaces.IJugador;
@@ -77,8 +74,6 @@ import java.util.List;
  *
  * TIPOS DE EVENTOS MANEJADOS:
  *
- * - CAMBIO_BUSCAR_PARTIDA: Se creó/actualizó la lista de lobbys
- * - CAMBIO_ESPERANDO_JUGADORES: El segundo jugador se unió a la partida
  * - CAMBIO_TURNO: Cambió el turno del juego
  * - PIEZA_COLOCADA: Un jugador colocó una pieza
  * - PIEZA_MOVIDA: Un jugador movió una pieza
@@ -86,7 +81,6 @@ import java.util.List;
  * - FORMACION_MOLINO: Se formó un molino (3 en línea)
  * - GAME_WIN: La partida terminó con un ganador
  * - GAME_OVER: La partida terminó
- * - DESCONEXION_J/RECONEXION_J: Jugador se desconectó/reconectó
  *
  * FILTRADO DE EVENTOS:
  *
@@ -148,34 +142,21 @@ public class Controller implements IControladorRemoto {
         this.modelo = (IModelo) modelo;
     }
 
-    // Métodos de gestión de usuarios
-
-    public void registrarUsuario(String nombre, String password) throws RemoteException, JugadorExistente {
-        modelo.registrarUsuario(nombre, password);
-    }
-
-    public void iniciarSesion(String nombre, String password) throws RemoteException, JugadorNoExistente, PasswordIncorrecta {
-        modelo.iniciarSesion(nombre, password);
-        this.nombreJugador = nombre;
-    }
-
     // Métodos de gestión de partidas
 
-    public IPartida crearPartida(String nombreJugador2) throws RemoteException {
-        IPartida partida = modelo.crearPartida(nombreJugador, nombreJugador2);
+    public IPartida buscarPartida() throws RemoteException {
+        IPartida partida = modelo.buscarPartida(nombreJugador);
         this.idPartidaActual = partida.getId();
-        this.esJugador1 = true;
+
+        // Determinar si es jugador 1 o 2 según el símbolo asignado
+        for (IJugador j : partida.getJugadores()) {
+            if (j.getNombre().equals(nombreJugador)) {
+                this.esJugador1 = (j.getSimbolo() == 'X');
+                break;
+            }
+        }
+
         return partida;
-    }
-
-    public void unirseAPartida(int idPartida) throws RemoteException {
-        modelo.agregarJugadorAPartida(idPartida, nombreJugador);
-        this.idPartidaActual = idPartida;
-        this.esJugador1 = false;
-    }
-
-    public java.util.List<IPartida> buscarPartidas() throws RemoteException {
-        return modelo.getPartidas();
     }
 
     public IPartida getPartidaActual() throws RemoteException {
@@ -209,14 +190,6 @@ public class Controller implements IControladorRemoto {
 
     public java.util.Map<String, Integer> getRanking() throws RemoteException {
         return modelo.getRanking();
-    }
-
-    // Métodos de conexión/desconexión
-
-    public void desconectar() throws RemoteException {
-        if (idPartidaActual != -1) {
-            modelo.desconectarJugador(nombreJugador, idPartidaActual);
-        }
     }
 
     // ===================================================================
@@ -263,7 +236,7 @@ public class Controller implements IControladorRemoto {
             // ===============================================================
             // FILTRO 2: VERIFICAR EL ESTADO ACTUAL DE LA VISTA
             // ===============================================================
-            // La vista tiene estados (EN_MENU, EN_JUEGO, EN_BUSCAR_PARTIDA, etc.)
+            // La vista tiene estados (EN_MENU, EN_JUEGO, EN_ESPERANDO_JUGADORES, etc.)
             // Solo procesamos eventos si la vista está en el estado apropiado
             Estados estadoVista = vista.getEstado();
             System.out.println("[Controller-" + nombreJugador + "] Estado actual: " + estadoVista);
@@ -273,39 +246,23 @@ public class Controller implements IControladorRemoto {
             // ===============================================================
             switch (e.getEvento()) {
                 // -----------------------------------------------------------
-                // EVENTO: Lista de partidas cambió
-                // Alguien creó un nuevo lobby o se actualizó la lista
-                // -----------------------------------------------------------
-                case CAMBIO_BUSCAR_PARTIDA -> {
-                    System.out.println("[Controller-" + nombreJugador + "] Procesando CAMBIO_BUSCAR_PARTIDA");
-                    // Solo actualizar si el usuario está viendo la lista de partidas
-                    if (estadoVista == Estados.EN_BUSCAR_PARTIDA) {
-                        vista.buscarPartidas(); // Refrescar la lista de lobbys
-                    }
-                }
-
-                // -----------------------------------------------------------
-                // EVENTO: El segundo jugador se unió a la partida
-                // La partida pasó de 1 a 2 jugadores y está lista para comenzar
-                // -----------------------------------------------------------
-                case CAMBIO_ESPERANDO_JUGADORES -> {
-                    System.out.println("[Controller-" + nombreJugador + "] Procesando CAMBIO_ESPERANDO_JUGADORES");
-                    // Este evento notifica que el segundo jugador se unió
-                    if (estadoVista == Estados.EN_ESPERANDO_JUGADORES) {
-                        System.out.println("[Controller-" + nombreJugador + "] Segundo jugador detectado, cerrando sala espera");
-                        // La SalaEspera tiene un timer que detecta esto y cierra automáticamente
-                    }
-                }
-
-                // -----------------------------------------------------------
                 // EVENTOS DE JUEGO: Cambios durante la partida
                 // Estos eventos requieren actualizar el tablero y la interfaz
                 // -----------------------------------------------------------
                 case CAMBIO_TURNO, PIEZA_COLOCADA, PIEZA_MOVIDA, PIEZA_ELIMINADA, FORMACION_MOLINO -> {
                     System.out.println("[Controller-" + nombreJugador + "] Procesando evento de juego: " + e.getEvento());
-                    // Solo actualizar si el usuario está viendo el juego
+                    // Actualizar si está en juego O si está esperando y el evento es CAMBIO_TURNO
+                    // (CAMBIO_TURNO indica que la partida comenzó con el segundo jugador)
                     if (estadoVista == Estados.EN_JUEGO) {
                         vista.mostrarPartida(); // Actualizar tablero, turno, piezas, etc.
+                    } else if (estadoVista == Estados.EN_ESPERANDO_JUGADORES && e.getEvento() == Eventos.CAMBIO_TURNO) {
+                        System.out.println("[Controller-" + nombreJugador + "] ✓ Segundo jugador detectado, iniciando partida");
+                        System.out.println("[Controller-" + nombreJugador + "] Llamando a vista.mostrarPartida()...");
+                        vista.mostrarPartida(); // Iniciar la partida
+                        System.out.println("[Controller-" + nombreJugador + "] vista.mostrarPartida() completado");
+                    } else {
+                        System.out.println("[Controller-" + nombreJugador + "] No se procesa evento " + e.getEvento() +
+                                         " (Estado actual: " + estadoVista + ")");
                     }
                 }
 
@@ -324,16 +281,6 @@ public class Controller implements IControladorRemoto {
                 case GAME_OVER -> {
                     if (estadoVista == Estados.EN_JUEGO) {
                         vista.mostrarGameOver(); // Mostrar pantalla de fin de juego
-                    }
-                }
-
-                // -----------------------------------------------------------
-                // EVENTO: Desconexión de jugador
-                // Un jugador se desconectó (causa derrota automática)
-                // -----------------------------------------------------------
-                case DESCONEXION_J -> {
-                    if (estadoVista == Estados.EN_JUEGO) {
-                        vista.mostrarPartida(); // Refrescar para mostrar fin del juego
                     }
                 }
             }

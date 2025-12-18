@@ -1,8 +1,5 @@
 package model.clases;
 
-import model.excepciones.JugadorExistente;
-import model.excepciones.JugadorNoExistente;
-import model.excepciones.PasswordIncorrecta;
 import model.interfaces.IJugador;
 import model.interfaces.ISesion;
 import serializacion.Serializador;
@@ -33,27 +30,6 @@ public class Sesion implements ISesion, Serializable {
             serializador.writeOneObject(usuarios);
         } else {
             usuarios = (Map<String, IJugador>) obj;
-        }
-    }
-
-    @Override
-    public void registrarse(String nombre, String password) throws JugadorExistente {
-        if (usuarios.containsKey(nombre)) {
-            throw new JugadorExistente();
-        }
-        IJugador jugador = new Jugador(nombre, password, 'X'); // El símbolo se asignará en la partida
-        usuarios.put(nombre, jugador);
-        serializador.writeOneObject(usuarios);
-    }
-
-    @Override
-    public void iniciarSesion(String nombre, String password) throws JugadorNoExistente, PasswordIncorrecta {
-        if (!usuarios.containsKey(nombre)) {
-            throw new JugadorNoExistente();
-        }
-        IJugador jugador = usuarios.get(nombre);
-        if (!jugador.validarPassword(password)) {
-            throw new PasswordIncorrecta();
         }
     }
 

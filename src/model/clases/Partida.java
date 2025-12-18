@@ -43,7 +43,7 @@ public class Partida implements IPartida, Serializable {
                              jugador1.getNombre() + " vs " + jugador2.getNombre());
         } else {
             this.estadoPartida = EstadoPartida.EN_ESPERA;
-            System.out.println("   [Partida #" + id + "] Lobby creado (1/2): " + jugador1.getNombre());
+            System.out.println("   [Partida #" + id + "] Partida en espera (1/2): " + jugador1.getNombre());
         }
 
         this.jugadorActual = jugador1;
@@ -80,11 +80,6 @@ public class Partida implements IPartida, Serializable {
                 System.out.println("   [Partida #" + id + "] ¡Partida completa! Estado -> EN_JUEGO");
             }
         }
-    }
-
-    @Override
-    public void removerJugador(String nombreJugador) {
-        jugadores.removeIf(j -> j.getNombre().equals(nombreJugador));
     }
 
     @Override
@@ -194,26 +189,6 @@ public class Partida implements IPartida, Serializable {
     @Override
     public boolean isEsperandoEliminar() {
         return estadoJuego == EstadoJuego.ESPERANDO_ELIMINAR;
-    }
-
-    @Override
-    public void setEstadoJugador(String nombreJugador, EstadoJugador estado) {
-        for (IJugador jugador : jugadores) {
-            if (jugador.getNombre().equals(nombreJugador)) {
-                jugador.setEstadoConexion(estado);
-                break;
-            }
-        }
-    }
-
-    @Override
-    public EstadoJugador getEstadoJugador(String nombreJugador) {
-        for (IJugador jugador : jugadores) {
-            if (jugador.getNombre().equals(nombreJugador)) {
-                return jugador.getEstadoConexion();
-            }
-        }
-        return null;
     }
 
     // Métodos privados auxiliares

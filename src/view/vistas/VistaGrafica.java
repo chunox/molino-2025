@@ -2,9 +2,11 @@ package view.vistas;
 
 import controller.Controller;
 import model.enums.Estados;
+import model.interfaces.IPartida;
 import view.frames.*;
 import view.interfaces.IVista;
 import javax.swing.*;
+import java.awt.*;
 import java.rmi.RemoteException;
 
 /**
@@ -39,17 +41,13 @@ import java.rmi.RemoteException;
  *   └─────────────────────────────────────────────────────────┘
  *
  *   [1] MenuPrincipal (estado: EN_MENU)
- *        - Usuario ve opciones: Crear partida, Unirse, Ranking
+ *        - Usuario ve opciones: Buscar partida, Ver Ranking, Salir
  *        ↓
- *   [2a] Si crea partida → SalaEspera (estado: EN_ESPERANDO_JUGADORES)
- *        - Muestra mensaje "Esperando jugador 2..."
- *        - Timer verifica cada segundo si llegó el segundo jugador
- *        - Cuando llega el segundo jugador → VentanaPrincipal/VentanaConsola
- *        ↓
- *   [2b] Si se une → ListaPartidas (estado: EN_BUSCAR_PARTIDA)
- *        - Muestra lobbys disponibles
- *        - Usuario selecciona una partida
- *        - Automáticamente → VentanaPrincipal/VentanaConsola
+ *   [2] Buscar partida (matchmaking automático)
+ *        - Si hay partida disponible → Emparejamiento automático
+ *        - Si NO hay partida → Crear nueva y esperar
+ *        - Muestra mensaje de espera si es necesario
+ *        - Cuando hay 2 jugadores → VentanaPrincipal/VentanaConsola
  *        ↓
  *   [3] VentanaPrincipal + VentanaConsola (estado: EN_JUEGO)
  *        - Tablero de juego visible
@@ -63,16 +61,12 @@ import java.rmi.RemoteException;
  * ESTADOS POSIBLES:
  *
  * - EN_MENU: Usuario en menú principal
- * - EN_BUSCAR_PARTIDA: Usuario viendo lista de lobbys
- * - EN_ESPERANDO_JUGADORES: Usuario esperando que llegue segundo jugador
+ * - EN_ESPERANDO_JUGADORES: Usuario esperando emparejamiento
  * - EN_JUEGO: Usuario jugando una partida activa
  *
  * VENTANAS DISPONIBLES:
  *
  * - MenuPrincipal: Pantalla inicial con opciones
- * - MenuCrearPartida: (no se usa directamente en esta clase)
- * - ListaPartidas: Lista de lobbys disponibles para unirse
- * - SalaEspera: Pantalla de espera para el jugador 1
  * - VentanaPrincipal: Tablero gráfico del juego (Swing)
  * - VentanaConsola: Tablero por consola (alternativa texto)
  *
@@ -98,6 +92,12 @@ public class VistaGrafica implements IVista {
      */
     private Estados estado;
 
+    /**
+     * Tipo de vista preferida por el usuario
+     * true = Gráfica (Swing), false = Consola (Texto)
+     */
+    private boolean usarVistaGrafica;
+
     // ===================================================================
     // VENTANAS (PANTALLAS)
     // ===================================================================
@@ -108,16 +108,6 @@ public class VistaGrafica implements IVista {
      * Menú principal - Primera pantalla que ve el usuario
      */
     private MenuPrincipal menuPrincipal;
-
-    /**
-     * Sala de espera - Donde el jugador 1 espera al jugador 2
-     */
-    private SalaEspera salaEspera;
-
-    /**
-     * Lista de partidas - Muestra lobbys disponibles
-     */
-    private ListaPartidas listaPartidas;
 
     /**
      * Ventana principal del juego - Tablero gráfico
@@ -151,8 +141,7 @@ public class VistaGrafica implements IVista {
      * MOSTRAR MENÚ PRINCIPAL
      *
      * Muestra la pantalla de menú principal donde el usuario puede:
-     * - Crear una nueva partida
-     * - Unirse a una partida existente
+     * - Buscar partida (matchmaking automático)
      * - Ver el ranking
      *
      * IMPORTANTE: Usa SwingUtilities.invokeLater() para garantizar que
@@ -192,21 +181,54 @@ public class VistaGrafica implements IVista {
      */
     @Override
     public void mostrarPartida() throws RemoteException {
+        System.out.println("[VistaGrafica] mostrarPartida() llamado");
+
         // Cambiar estado de la vista
         this.estado = Estados.EN_JUEGO;
 
         // Ejecutar actualización en el Event Dispatch Thread
         SwingUtilities.invokeLater(() -> {
-            // Actualizar ventana gráfica si existe
-            if (ventanaPrincipal != null) {
-                ventanaPrincipal.setVisible(true);
-                ventanaPrincipal.actualizarInterfaz();  // Redibuja tablero, turno, etc.
-            }
+            try {
+                // Verificar qué tipo de vista usar
+                if (usarVistaGrafica) {
+                    // Crear ventana gráfica si no existe
+                    if (ventanaPrincipal == null) {
+                        System.out.println("[VistaGrafica] Creando VentanaPrincipal...");
+                        ventanaPrincipal = new VentanaPrincipal(
+                            controlador.getNombreJugador(),
+                            controlador.isEsJugador1(),
+                            controlador
+                        );
+                        setVentanaPrincipal(ventanaPrincipal);
+                    }
 
-            // Actualizar ventana de consola si existe
-            if (ventanaConsola != null) {
-                ventanaConsola.setVisible(true);
-                ventanaConsola.onActualizacionJuego();  // Actualiza texto del juego
+                    System.out.println("[VistaGrafica] Mostrando VentanaPrincipal");
+                    ventanaPrincipal.setVisible(true);
+                    ventanaPrincipal.actualizarInterfaz();  // Redibuja tablero, turno, etc.
+                } else {
+                    // Crear ventana de consola si no existe
+                    if (ventanaConsola == null) {
+                        System.out.println("[VistaGrafica] Creando VentanaConsola...");
+                        ventanaConsola = new VentanaConsola(
+                            controlador.getNombreJugador(),
+                            controlador.isEsJugador1(),
+                            controlador
+                        );
+                        setVentanaConsola(ventanaConsola);
+                    }
+
+                    System.out.println("[VistaGrafica] Mostrando VentanaConsola");
+                    ventanaConsola.setVisible(true);
+                    ventanaConsola.onActualizacionJuego();  // Actualiza tablero y estado
+                }
+
+                // Ocultar menú si está visible
+                if (menuPrincipal != null) {
+                    menuPrincipal.setVisible(false);
+                }
+            } catch (Exception e) {
+                System.err.println("[VistaGrafica] Error al mostrar partida: " + e.getMessage());
+                e.printStackTrace();
             }
         });
     }
@@ -222,40 +244,82 @@ public class VistaGrafica implements IVista {
     }
 
     @Override
-    public void buscarPartidas() throws RemoteException {
-        this.estado = Estados.EN_BUSCAR_PARTIDA;
-        SwingUtilities.invokeLater(() -> {
-            if (listaPartidas != null) {
-                listaPartidas.dispose();
-            }
-            listaPartidas = new ListaPartidas(controlador);
-            listaPartidas.setVisible(true);
-        });
-    }
+    public void buscarPartida() throws RemoteException {
+        try {
+            System.out.println("[VistaGrafica] Buscando partida...");
 
-    @Override
-    public void salaEspera() throws RemoteException {
-        this.estado = Estados.EN_ESPERANDO_JUGADORES;
+            // Buscar partida automáticamente (emparejamiento)
+            IPartida partida = controlador.buscarPartida();
 
-        // Ejecutar sincrónicamente si ya estamos en el EDT, o esperar si no lo estamos
-        if (SwingUtilities.isEventDispatchThread()) {
-            if (salaEspera != null) {
-                salaEspera.dispose();
-            }
-            salaEspera = new SalaEspera(controlador);
-            salaEspera.setVisible(true);
-        } else {
-            try {
-                SwingUtilities.invokeAndWait(() -> {
-                    if (salaEspera != null) {
-                        salaEspera.dispose();
-                    }
-                    salaEspera = new SalaEspera(controlador);
-                    salaEspera.setVisible(true);
+            System.out.println("[VistaGrafica] Partida obtenida ID: " + partida.getId() +
+                             ", Jugadores: " + partida.getJugadores().size());
+
+            // Verificar si la partida ya tiene 2 jugadores (emparejamiento inmediato)
+            if (partida.getJugadores().size() == 2) {
+                // Partida completa - iniciar juego inmediatamente
+                System.out.println("[VistaGrafica] Partida completa (2 jugadores), iniciando juego");
+                this.estado = Estados.EN_JUEGO;
+                mostrarPartida();
+            } else {
+                // Solo hay 1 jugador - esperar al segundo
+                // El evento CAMBIO_TURNO notificará cuando se una el segundo jugador
+                System.out.println("[VistaGrafica] Esperando al segundo jugador...");
+                System.out.println("[VistaGrafica] La partida comenzará automáticamente cuando se conecte otro jugador");
+                this.estado = Estados.EN_ESPERANDO_JUGADORES;
+
+                // Mostrar mensaje no modal usando un JDialog personalizado
+                SwingUtilities.invokeLater(() -> {
+                    final JDialog dialogEspera = new JDialog((JFrame) null, "Buscando oponente", false);
+                    dialogEspera.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                    dialogEspera.setSize(400, 150);
+                    dialogEspera.setLocationRelativeTo(null);
+
+                    JPanel panel = new JPanel(new BorderLayout(10, 10));
+                    panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+                    JLabel label = new JLabel("<html><center>Esperando a que otro jugador se conecte...<br>" +
+                                              "La partida comenzará automáticamente.</center></html>");
+                    label.setHorizontalAlignment(SwingConstants.CENTER);
+                    panel.add(label, BorderLayout.CENTER);
+
+                    JProgressBar progressBar = new JProgressBar();
+                    progressBar.setIndeterminate(true);
+                    panel.add(progressBar, BorderLayout.SOUTH);
+
+                    dialogEspera.add(panel);
+                    dialogEspera.setVisible(true);
+
+                    System.out.println("[VistaGrafica] Diálogo de espera mostrado (no modal)");
+
+                    // Guardar referencia para poder cerrarlo cuando llegue el evento
+                    // El evento CAMBIO_TURNO cerrará este diálogo automáticamente
+                    Thread monitorThread = new Thread(() -> {
+                        while (dialogEspera.isVisible() && estado == Estados.EN_ESPERANDO_JUGADORES) {
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                break;
+                            }
+                        }
+                        SwingUtilities.invokeLater(() -> {
+                            if (dialogEspera.isVisible()) {
+                                dialogEspera.dispose();
+                            }
+                        });
+                    });
+                    monitorThread.setDaemon(true);
+                    monitorThread.start();
                 });
-            } catch (Exception e) {
-                throw new RemoteException("Error al crear sala de espera", e);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(null,
+                    "Error al buscar partida: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            });
+            throw new RemoteException("Error al buscar partida", e);
         }
     }
 
@@ -281,5 +345,10 @@ public class VistaGrafica implements IVista {
 
     public void setVentanaConsola(VentanaConsola ventana) {
         this.ventanaConsola = ventana;
+    }
+
+    // Método para establecer el tipo de vista preferida
+    public void setUsarVistaGrafica(boolean usarVistaGrafica) {
+        this.usarVistaGrafica = usarVistaGrafica;
     }
 }

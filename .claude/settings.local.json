@@ -6,7 +6,11 @@
       "Bash(dir:*)",
       "Bash(mkdir:*)",
       "Bash(find:*)",
-      "Bash(del \"C:\\Users\\domin\\IdeaProjects\\Elmolino\\src\\view\\frames\\LoginFrame.java\" \"C:\\Users\\domin\\IdeaProjects\\Elmolino\\src\\view\\frames\\MenuFrame.java\" \"C:\\Users\\domin\\IdeaProjects\\Elmolino\\src\\view\\frames\\PartidaFrame.java\")"
+      "Bash(del \"C:\\Users\\domin\\IdeaProjects\\Elmolino\\src\\view\\frames\\LoginFrame.java\" \"C:\\Users\\domin\\IdeaProjects\\Elmolino\\src\\view\\frames\\MenuFrame.java\" \"C:\\Users\\domin\\IdeaProjects\\Elmolino\\src\\view\\frames\\PartidaFrame.java\")",
+      "Bash(del \"C:\\Users\\domin\\IdeaProjects\\Elmolino\\src\\model\\excepciones\\PasswordIncorrecta.java\")",
+      "Bash(del \"C:\\Users\\domin\\IdeaProjects\\Elmolino\\src\\model\\enums\\EstadoJugador.java\")",
+      "Bash(rm:*)",
+      "Bash(javac:*)"
     ]
   }
 }
