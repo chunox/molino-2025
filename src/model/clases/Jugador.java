@@ -191,6 +191,7 @@ public class Jugador implements IJugador, Serializable {
         return nombre.equals(jugador.nombre);
     }
 
+    //deprecado
     /**
      * OBTENER CÓDIGO HASH
      *

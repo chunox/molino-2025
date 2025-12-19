@@ -11,6 +11,8 @@ import java.util.Map;
  */
 public interface IModelo extends IObservableRemoto {
 
+    //obtener instancia
+
     // Gestión de partidas
     IPartida buscarPartida(String nombreJugador) throws RemoteException;
     IPartida getPartida(int id) throws RemoteException;
