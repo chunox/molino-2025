@@ -11,6 +11,5 @@ public interface IJugador extends Serializable {
     int getPiezasColocadas();
     int getPiezasEnTablero();
     void incrementarPiezasColocadas();
-    void incrementarPiezasEnTablero();
     void decrementarPiezasEnTablero();
 }

@@ -11,10 +11,12 @@ public interface IVista {
     void menu();
     void mostrarPartida() throws RemoteException;
     void mostrarGameOver();
-    void mostrarGameWin() throws RemoteException;
+    void mostrarGameWin() ;
     void buscarPartida() throws RemoteException;
 
     Estados getEstado();
     void setEstado(Estados estado);
     Controller getControlador();
+
+    void salirDePartida();
 }

@@ -1,14 +1,11 @@
 package view.frames;
 
-import controller.Controller;
 import model.interfaces.IJugador;
-import model.interfaces.IPartida;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,7 +14,6 @@ import java.util.Map;
  */
 public class PanelTablero extends JPanel {
 
-    private Controller controlador;
     private Map<String, Point> posiciones;
     private Map<String, Circle> circulos;
     private String posicionSeleccionada;
@@ -46,10 +42,6 @@ public class PanelTablero extends JPanel {
                 manejarClick(e.getPoint());
             }
         });
-    }
-
-    public void setControlador(Controller controlador) {
-        this.controlador = controlador;
     }
 
     private void inicializarPosiciones() {
@@ -188,16 +180,7 @@ public class PanelTablero extends JPanel {
     }
 
     private void manejarClick(Point punto) {
-        String posicion = encontrarPosicionCercana(punto);
-        if (posicion != null && controlador != null) {
-            // Llamar al método del controlador principal que maneja la lógica
-            notificarClickPosicion(posicion);
-        }
-    }
-
-    private void notificarClickPosicion(String posicion) {
-        // Este método será llamado desde VentanaPrincipal
-        // que tiene acceso a la lógica completa del juego
+        // Método obsoleto - ahora se usa setClickListener
     }
 
     private String encontrarPosicionCercana(Point punto) {

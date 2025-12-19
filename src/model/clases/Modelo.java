@@ -2,7 +2,6 @@ package model.clases;
 
 import ar.edu.unlu.rmimvc.observer.ObservableRemoto;
 import model.enums.*;
-import model.excepciones.*;
 import model.interfaces.*;
 import java.io.Serializable;
 import java.rmi.RemoteException;
@@ -109,11 +108,6 @@ public class Modelo extends ObservableRemoto implements IModelo, Serializable {
     // ===================================================================
 
     /**
-     * Gestión de usuarios
-     */
-    private ISesion usuarios;
-
-    /**
      * Todas las partidas activas
      * Map<ID_Partida, Partida>
      * Permite acceso rápido a cualquier partida por su ID
@@ -163,12 +157,10 @@ public class Modelo extends ObservableRemoto implements IModelo, Serializable {
      *
      * RELACIONES:
      * - Llama a super() para inicializar ObservableRemoto (patrón Observer)
-     * - Llama a Sesion.getInstancia() para obtener el gestor de usuarios
      * - Llama a Ranking.getInstancia() para obtener el sistema de puntuación
      */
     private Modelo() throws RemoteException {
         super();
-        usuarios = Sesion.getInstancia();
         partidas = new HashMap<>();
         ranking = Ranking.getInstancia();
         contadorPartidas = 0;
@@ -267,7 +259,6 @@ public class Modelo extends ObservableRemoto implements IModelo, Serializable {
      * - colocarPieza() para obtener la partida antes de colocar una pieza
      * - moverPieza() para obtener la partida antes de mover una pieza
      * - eliminarPiezaOponente() para obtener la partida antes de eliminar
-     * - verificarFinDelJuego() para verificar si hay ganador
      * - hayGanador() para verificar si hay ganador
      * - getGanador() para obtener el ganador
      */
@@ -428,28 +419,6 @@ public class Modelo extends ObservableRemoto implements IModelo, Serializable {
     }
 
     /**
-     * VERIFICAR SI EL JUEGO HA TERMINADO
-     *
-     * Verifica si la partida especificada ha finalizado (hay un ganador).
-     *
-     * @param id ID de la partida a verificar
-     * @return true si la partida terminó (hay ganador), false en caso contrario
-     * @throws RemoteException si hay error de comunicación RMI
-     *
-     * RELACIONES CON OTRAS FUNCIONES:
-     * - Llama a partidas.get(id) para obtener la partida
-     * - Llama a partida.hayGanador() para verificar si hay ganador
-     *
-     * NOTA: Esta función es equivalente a hayGanador() y ambas delegan
-     * la verificación a partida.hayGanador()
-     */
-    @Override
-    public boolean verificarFinDelJuego(int id) throws RemoteException {
-        IPartida partida = partidas.get(id);
-        return partida != null && partida.hayGanador();
-    }
-
-    /**
      * VERIFICAR SI HAY GANADOR
      *
      * Verifica si la partida especificada tiene un ganador.
@@ -461,9 +430,6 @@ public class Modelo extends ObservableRemoto implements IModelo, Serializable {
      * RELACIONES CON OTRAS FUNCIONES:
      * - Llama a partidas.get(id) para obtener la partida
      * - Llama a partida.hayGanador() para verificar si hay ganador
-     *
-     * NOTA: Esta función es equivalente a verificarFinDelJuego() y ambas
-     * delegan la verificación a partida.hayGanador()
      */
     @Override
     public boolean hayGanador(int id) throws RemoteException {
@@ -512,25 +478,4 @@ public class Modelo extends ObservableRemoto implements IModelo, Serializable {
         return ranking.getRanking();
     }
 
-    /**
-     * ACTUALIZAR RANKING DE UN JUGADOR
-     *
-     * Incrementa en 1 el número de victorias del jugador especificado en el ranking.
-     * Si el jugador no existe en el ranking, lo crea con 1 victoria.
-     *
-     * @param nombreJugador Nombre del jugador cuyo ranking se actualizará
-     * @throws RemoteException si hay error de comunicación RMI
-     *
-     * RELACIONES CON OTRAS FUNCIONES:
-     * - Llama a ranking.actualizar(nombreJugador) para incrementar victorias
-     *
-     * NOTA: Esta función es llamada automáticamente por:
-     * - eliminarPiezaOponente() cuando detecta un ganador
-     *
-     * El ranking se persiste automáticamente en el archivo ranking.dat
-     */
-    @Override
-    public void actualizarRanking(String nombreJugador) throws RemoteException {
-        ranking.actualizar(nombreJugador);
-    }
 }

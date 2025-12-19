@@ -2,9 +2,11 @@ package view.vistas;
 
 import controller.Controller;
 import model.enums.Estados;
+import model.interfaces.IJugador;
 import model.interfaces.IPartida;
 import view.frames.*;
 import view.interfaces.IVista;
+import view.interfaces.IVentanaJuego;
 import javax.swing.*;
 import java.awt.*;
 import java.rmi.RemoteException;
@@ -110,16 +112,10 @@ public class VistaGrafica implements IVista {
     private MenuPrincipal menuPrincipal;
 
     /**
-     * Ventana principal del juego - Tablero gráfico
+     * Ventana del juego activa - Puede ser gráfica o consola
+     * Usa polimorfismo mediante la interfaz IVentanaJuego
      */
-    private VentanaPrincipal ventanaPrincipal;
-
-    /**
-     * Ventana de consola - Tablero por texto
-     */
-    private VentanaConsola ventanaConsola;
-
-    //esto podria refactorizarlos como Ivista para aplicar principios de poo pero ya esta
+    private IVentanaJuego ventanaJuego;
 
     /**
      * CONSTRUCTOR
@@ -191,38 +187,29 @@ public class VistaGrafica implements IVista {
         // Ejecutar actualización en el Event Dispatch Thread
         SwingUtilities.invokeLater(() -> {
             try {
-                // Verificar qué tipo de vista usar
-                if (usarVistaGrafica) {
-                    // Crear ventana gráfica si no existe
-                    if (ventanaPrincipal == null) {
+                // Crear ventana si no existe
+                if (ventanaJuego == null) {
+                    if (usarVistaGrafica) {
                         System.out.println("[VistaGrafica] Creando VentanaPrincipal...");
-                        ventanaPrincipal = new VentanaPrincipal(
+                        ventanaJuego = new VentanaPrincipal(
                             controlador.getNombreJugador(),
                             controlador.isEsJugador1(),
                             controlador
                         );
-                        setVentanaPrincipal(ventanaPrincipal);
-                    }
-
-                    System.out.println("[VistaGrafica] Mostrando VentanaPrincipal");
-                    ventanaPrincipal.setVisible(true);
-                    ventanaPrincipal.actualizarInterfaz();  // Redibuja tablero, turno, etc.
-                } else {
-                    // Crear ventana de consola si no existe
-                    if (ventanaConsola == null) {
+                    } else {
                         System.out.println("[VistaGrafica] Creando VentanaConsola...");
-                        ventanaConsola = new VentanaConsola(
+                        ventanaJuego = new VentanaConsola(
                             controlador.getNombreJugador(),
                             controlador.isEsJugador1(),
                             controlador
                         );
-                        setVentanaConsola(ventanaConsola);
                     }
-
-                    System.out.println("[VistaGrafica] Mostrando VentanaConsola");
-                    ventanaConsola.setVisible(true);
-                    ventanaConsola.onActualizacionJuego();  // Actualiza tablero y estado
                 }
+
+                // Mostrar y actualizar ventana usando la interfaz común
+                System.out.println("[VistaGrafica] Mostrando y actualizando ventana de juego");
+                ventanaJuego.setVisible(true);
+                ventanaJuego.actualizarInterfaz();
 
                 // Ocultar menú si está visible
                 if (menuPrincipal != null) {
@@ -237,12 +224,91 @@ public class VistaGrafica implements IVista {
 
     @Override
     public void mostrarGameOver() {
-        System.out.println("Game Over");
+        SwingUtilities.invokeLater(() -> {
+            try {
+                IPartida partida = controlador.getPartidaActual();
+                if (partida == null) return;
+
+                String mensaje = "La partida ha finalizado.\n\n" +
+                               "Volviendo al menú principal...";
+
+                JOptionPane.showMessageDialog(
+                    null,
+                    mensaje,
+                    "Fin del juego",
+                    JOptionPane.INFORMATION_MESSAGE
+                );
+
+                volverAlMenu();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Override
-    public void mostrarGameWin() throws RemoteException {
-        System.out.println("Victoria");
+    public void mostrarGameWin() {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                IPartida partida = controlador.getPartidaActual();
+                if (partida == null) return;
+
+                IJugador ganador = partida.getGanador();
+                boolean ganaste = ganador.getNombre().equals(controlador.getNombreJugador());
+
+                String mensaje;
+                if (ganaste) {
+                    mensaje = "🎉 ¡FELICIDADES! ¡HAS GANADO! 🎉\n\n" +
+                            "Victoria registrada en el ranking.\n" +
+                            "Volviendo al menú principal...";
+                } else {
+                    mensaje = "😔 HAS PERDIDO 😔\n\n" +
+                            ganador.getNombre() + " ha ganado la partida.\n" +
+                            "Volviendo al menú principal...";
+                }
+
+                JOptionPane.showMessageDialog(
+                    null,
+                    mensaje,
+                    "Fin del juego",
+                    JOptionPane.INFORMATION_MESSAGE
+                );
+
+                volverAlMenu();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    /**
+     * VOLVER AL MENÚ PRINCIPAL
+     *
+     * Limpia el estado de la partida actual, cierra las ventanas de juego,
+     * y muestra el menú principal.
+     *
+     * Este método se llama automáticamente cuando termina una partida.
+     */
+    private void volverAlMenu() {
+        try {
+            // Cerrar y limpiar ventana de juego
+            if (ventanaJuego != null) {
+                ventanaJuego.setVisible(false);
+                ventanaJuego.dispose();
+                ventanaJuego = null;
+            }
+
+            // Resetear estado del controlador
+            controlador.setIdPartidaActual(-1);
+
+            // Cambiar estado de la vista
+            this.estado = Estados.EN_MENU;
+
+            // Mostrar menú principal
+            menu();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -340,17 +406,32 @@ public class VistaGrafica implements IVista {
         return controlador;
     }
 
-    // Métodos para registrar ventanas activas
-    public void setVentanaPrincipal(VentanaPrincipal ventana) {
-        this.ventanaPrincipal = ventana;
-    }
-
-    public void setVentanaConsola(VentanaConsola ventana) {
-        this.ventanaConsola = ventana;
-    }
-
-    // Método para establecer el tipo de vista preferida
+    /**
+     * Establece el tipo de vista preferida
+     * @param usarVistaGrafica true para vista gráfica, false para vista de consola
+     */
     public void setUsarVistaGrafica(boolean usarVistaGrafica) {
         this.usarVistaGrafica = usarVistaGrafica;
+    }
+
+    /**
+     * SALIR DE LA PARTIDA MANUALMENTE
+     *
+     * Permite al usuario salir de la partida actual antes de que termine.
+     * Muestra un diálogo de confirmación y vuelve al menú principal.
+     */
+    public void salirDePartida() {
+        int opcion = JOptionPane.showConfirmDialog(
+            null,
+            "¿Estás seguro de que quieres salir de la partida?\n" +
+            "Esta acción no se puede deshacer.",
+            "Confirmar salida",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE
+        );
+
+        if (opcion == JOptionPane.YES_OPTION) {
+            volverAlMenu();
+        }
     }
 }

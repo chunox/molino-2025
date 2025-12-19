@@ -4,6 +4,7 @@ import controller.Controller;
 import model.enums.FaseJuego;
 import model.interfaces.IJugador;
 import model.interfaces.IPartida;
+import view.interfaces.IVentanaJuego;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,7 +15,7 @@ import java.rmi.RemoteException;
 /**
  * Ventana de consola adaptada para RMI
  */
-public class VentanaConsola extends JFrame {
+public class VentanaConsola extends JFrame implements IVentanaJuego {
 
     private final Controller controlador;
     private final boolean esJugador1;
@@ -147,7 +148,7 @@ public class VentanaConsola extends JFrame {
                     return;
                 }
                 case "salir", "exit" -> {
-                    dispose();
+                    salirDePartida();
                     return;
                 }
             }
@@ -441,10 +442,18 @@ public class VentanaConsola extends JFrame {
         areaPosiciones.append(padding + mensaje + "\n");
     }
 
-    public void onActualizacionJuego() {
+    @Override
+    public void actualizarInterfaz() {
         SwingUtilities.invokeLater(() -> {
             actualizarTablero();
             mostrarEstado();
         });
+    }
+
+    /**
+     * Permite salir de la partida actual
+     */
+    private void salirDePartida() {
+        controlador.getVista().salirDePartida();
     }
 }

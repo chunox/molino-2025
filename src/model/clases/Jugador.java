@@ -162,19 +162,6 @@ public class Jugador implements IJugador, Serializable {
     }
 
     /**
-     * INCREMENTAR PIEZAS EN TABLERO
-     *
-     * Incrementa solo el contador de piezas en tablero.
-     *
-     * NOTA: Actualmente no se usa en el código, pero está disponible por si
-     * se necesita en futuras implementaciones.
-     */
-    @Override
-    public void incrementarPiezasEnTablero() {
-        piezasEnTablero++;
-    }
-
-    /**
      * DECREMENTAR PIEZAS EN TABLERO
      *
      * Decrementa el contador de piezas en tablero cuando se elimina una pieza.

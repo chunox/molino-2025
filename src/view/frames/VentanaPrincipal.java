@@ -4,6 +4,7 @@ import controller.Controller;
 import model.enums.FaseJuego;
 import model.interfaces.IJugador;
 import model.interfaces.IPartida;
+import view.interfaces.IVentanaJuego;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,7 +13,7 @@ import java.rmi.RemoteException;
 /**
  * Ventana principal del juego adaptada para RMI
  */
-public class VentanaPrincipal extends JFrame {
+public class VentanaPrincipal extends JFrame implements IVentanaJuego {
 
     private final Controller controlador;
     private final boolean esJugador1;
@@ -31,23 +32,30 @@ public class VentanaPrincipal extends JFrame {
         String colorJugador = esJugador1 ? "Rojo (X)" : "Azul (O)";
         setTitle("Juego del Molino - " + nombreJugador + " (" + colorJugador + ") - Partida #" +
                  controlador.getIdPartidaActual());
-        setSize(800, 700);
+        setSize(650, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
         // Panel del tablero
         panelTablero = new PanelTablero();
-        panelTablero.setControlador(controlador);
         panelTablero.setClickListener(this::manejarClicEnPosicion);
         add(panelTablero, BorderLayout.CENTER);
 
         // Panel de control
         panelControl = new PanelControl();
+        panelControl.setSalirListener(e -> salirDePartida());
         add(panelControl, BorderLayout.SOUTH);
 
         // Actualizar vista inicial
         actualizarInterfaz();
+    }
+
+    /**
+     * Permite salir de la partida actual
+     */
+    private void salirDePartida() {
+        controlador.getVista().salirDePartida();
     }
 
     private void manejarClicEnPosicion(String posicionId) {
@@ -226,14 +234,6 @@ public class VentanaPrincipal extends JFrame {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public PanelTablero getPanelTablero() {
-        return panelTablero;
-    }
-
-    public PanelControl getPanelControl() {
-        return panelControl;
     }
 
 }

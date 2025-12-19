@@ -20,6 +20,5 @@ public enum Eventos {
     FORMACION_MOLINO,   // Se formó un molino (3 en línea) - Generado por: colocarPieza(), moverPieza()
 
     // Eventos de finalización
-    GAME_OVER,          // Fin de partida (no usado actualmente)
     GAME_WIN            // Hay un ganador - Generado por: eliminarPiezaOponente()
 }

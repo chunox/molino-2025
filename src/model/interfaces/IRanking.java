@@ -9,5 +9,4 @@ import java.util.Map;
 public interface IRanking extends Serializable {
     void actualizar(String nombreJugador);
     Map<String, Integer> getRanking();
-    int getVictorias(String nombreJugador);
 }

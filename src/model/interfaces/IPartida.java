@@ -10,22 +10,17 @@ import java.util.List;
  */
 public interface IPartida extends Serializable {
     int getId();
-    void setId(int id);
 
     List<IJugador> getJugadores();
     void agregarJugador(IJugador jugador);
 
     EstadoPartida getEstadoPartida();
-    void setEstadoPartida(EstadoPartida estado);
 
     FaseJuego getFaseActual();
-    void setFaseActual(FaseJuego fase);
 
     IJugador getJugadorActual();
-    void setJugadorActual(IJugador jugador);
 
     IJugador getGanador();
-    void setGanador(IJugador ganador);
 
     boolean hayGanador();
 

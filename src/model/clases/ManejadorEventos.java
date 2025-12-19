@@ -57,17 +57,6 @@ public class ManejadorEventos implements IManejadorEventos, Serializable {
         return id;
     }
 
-    /**
-     * VERIFICAR SI ES DE UNA PARTIDA ESPECÍFICA
-     * @param id ID de partida a comparar
-     * @return true si el evento es de esa partida
-     * RELACIONES: Llamado por Controller.actualizar()
-     */
-    @Override
-    public boolean esIgual(int id) {
-        return this.id == id;
-    }
-
     /** @return Representación en texto del evento */
     @Override
     public String toString() {

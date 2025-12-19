@@ -80,7 +80,6 @@ import java.util.List;
  * - PIEZA_ELIMINADA: Un jugador eliminó una pieza del oponente
  * - FORMACION_MOLINO: Se formó un molino (3 en línea)
  * - GAME_WIN: La partida terminó con un ganador
- * - GAME_OVER: La partida terminó
  *
  * FILTRADO DE EVENTOS:
  *
@@ -274,15 +273,6 @@ public class Controller implements IControladorRemoto {
                         vista.mostrarGameWin(); // Mostrar mensaje de victoria/derrota
                     }
                 }
-
-                // -----------------------------------------------------------
-                // EVENTO: Partida terminada - Game over
-                // -----------------------------------------------------------
-                case GAME_OVER -> {
-                    if (estadoVista == Estados.EN_JUEGO) {
-                        vista.mostrarGameOver(); // Mostrar pantalla de fin de juego
-                    }
-                }
             }
         }
     }
@@ -309,7 +299,4 @@ public class Controller implements IControladorRemoto {
         this.nombreJugador = nombre;
     }
 
-    public void setEsJugador1(boolean esJugador1) {
-        this.esJugador1 = esJugador1;
-    }
 }

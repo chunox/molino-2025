@@ -148,16 +148,6 @@ public class Partida implements IPartida, Serializable {
     }
 
     /**
-     * ESTABLECER ID DE LA PARTIDA
-     *
-     * @param id Nuevo ID de la partida
-     */
-    @Override
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    /**
      * OBTENER LISTA DE JUGADORES
      *
      * Devuelve una copia de la lista de jugadores para evitar modificaciones externas.
@@ -218,16 +208,6 @@ public class Partida implements IPartida, Serializable {
     }
 
     /**
-     * ESTABLECER ESTADO DE LA PARTIDA
-     *
-     * @param estado Nuevo estado de la partida
-     */
-    @Override
-    public void setEstadoPartida(EstadoPartida estado) {
-        this.estadoPartida = estado;
-    }
-
-    /**
      * OBTENER FASE ACTUAL DEL JUEGO
      *
      * @return Fase actual (COLOCACION o MOVIMIENTO)
@@ -235,16 +215,6 @@ public class Partida implements IPartida, Serializable {
     @Override
     public FaseJuego getFaseActual() {
         return faseActual;
-    }
-
-    /**
-     * ESTABLECER FASE ACTUAL DEL JUEGO
-     *
-     * @param fase Nueva fase del juego
-     */
-    @Override
-    public void setFaseActual(FaseJuego fase) {
-        this.faseActual = fase;
     }
 
     /**
@@ -258,16 +228,6 @@ public class Partida implements IPartida, Serializable {
     }
 
     /**
-     * ESTABLECER JUGADOR ACTUAL
-     *
-     * @param jugador Jugador que tendrá el turno
-     */
-    @Override
-    public void setJugadorActual(IJugador jugador) {
-        this.jugadorActual = jugador;
-    }
-
-    /**
      * OBTENER GANADOR DE LA PARTIDA
      *
      * @return Jugador ganador, o null si no hay ganador aún
@@ -275,16 +235,6 @@ public class Partida implements IPartida, Serializable {
     @Override
     public IJugador getGanador() {
         return ganador;
-    }
-
-    /**
-     * ESTABLECER GANADOR DE LA PARTIDA
-     *
-     * @param ganador Jugador que ganó la partida
-     */
-    @Override
-    public void setGanador(IJugador ganador) {
-        this.ganador = ganador;
     }
 
     /**
@@ -665,20 +615,6 @@ public class Partida implements IPartida, Serializable {
             }
         }
         return true;
-    }
-
-    /**
-     * OBTENER TABLERO
-     *
-     * Devuelve la referencia al tablero de la partida.
-     *
-     * @return El tablero de juego
-     *
-     * NOTA: Esta función NO está en la interfaz IPartida, es pública
-     * para uso interno del modelo.
-     */
-    public Tablero getTablero() {
-        return tablero;
     }
 
     /**

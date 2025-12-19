@@ -9,5 +9,4 @@ import java.io.Serializable;
 public interface IManejadorEventos extends Serializable {
     Eventos getEvento();
     int getId();
-    boolean esIgual(int id);
 }

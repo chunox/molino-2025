@@ -21,11 +21,9 @@ public interface IModelo extends IObservableRemoto {
     void eliminarPiezaOponente(int idPartida, String posicion) throws RemoteException;
 
     // Gestión de estados
-    boolean verificarFinDelJuego(int id) throws RemoteException;
     boolean hayGanador(int id) throws RemoteException;
     IJugador getGanador(int id) throws RemoteException;
 
     // Ranking
     Map<String, Integer> getRanking() throws RemoteException;
-    void actualizarRanking(String nombreJugador) throws RemoteException;
 }

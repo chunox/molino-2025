@@ -365,13 +365,4 @@ public class Tablero implements Serializable {
         return Collections.unmodifiableMap(posiciones);
     }
 
-    /**
-     * OBTENER POSICIONES ADYACENTES
-     * Devuelve la lista de posiciones conectadas a una posición dada.
-     * @param posicion Posición origen
-     * @return Lista de posiciones adyacentes
-     */
-    public List<String> getAdyacentes(String posicion) {
-        return adyacencias.getOrDefault(posicion, Collections.emptyList());
-    }
 }

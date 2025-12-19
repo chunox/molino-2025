@@ -66,13 +66,4 @@ public class Ranking implements IRanking, Serializable {
         return new HashMap<>(ranking);
     }
 
-    /**
-     * OBTENER VICTORIAS DE UN JUGADOR
-     * @param nombreJugador Nombre del jugador
-     * @return Número de victorias (0 si no está en el ranking)
-     */
-    @Override
-    public int getVictorias(String nombreJugador) {
-        return ranking.getOrDefault(nombreJugador, 0);
-    }
 }
