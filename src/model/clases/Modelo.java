@@ -131,6 +131,18 @@ public class Modelo extends ObservableRemoto implements IModelo, Serializable {
      */
     private int contadorPartidas;
 
+    /**
+     * OBTENER INSTANCIA ÚNICA DEL MODELO (Singleton)
+     *
+     * Implementación del patrón Singleton para garantizar que solo exista
+     * una instancia del Modelo en el servidor.
+     *
+     * @return La instancia única del Modelo
+     * @throws RemoteException si hay error en la comunicación RMI
+     *
+     * RELACIONES:
+     * - Si no existe instancia, llama al constructor privado Modelo()
+     */
     public static IModelo getInstancia() throws RemoteException {
         if (instancia == null) {
             instancia = new Modelo();
@@ -138,6 +150,22 @@ public class Modelo extends ObservableRemoto implements IModelo, Serializable {
         return instancia;
     }
 
+    /**
+     * CONSTRUCTOR PRIVADO DEL MODELO (Singleton)
+     *
+     * Inicializa todos los componentes del sistema:
+     * - Sistema de usuarios (Sesion)
+     * - Mapa de partidas activas
+     * - Sistema de ranking
+     * - Contador de partidas
+     *
+     * @throws RemoteException si hay error en la comunicación RMI
+     *
+     * RELACIONES:
+     * - Llama a super() para inicializar ObservableRemoto (patrón Observer)
+     * - Llama a Sesion.getInstancia() para obtener el gestor de usuarios
+     * - Llama a Ranking.getInstancia() para obtener el sistema de puntuación
+     */
     private Modelo() throws RemoteException {
         super();
         usuarios = Sesion.getInstancia();
@@ -165,6 +193,15 @@ public class Modelo extends ObservableRemoto implements IModelo, Serializable {
      * @param nombreJugador Nombre del jugador que busca partida
      * @return La partida asignada (nueva o existente)
      * @throws RemoteException si hay error de comunicación RMI
+     *
+     * RELACIONES CON OTRAS FUNCIONES:
+     * - Llama a p.getEstadoPartida() para verificar estado de cada partida
+     * - Llama a p.getJugadores() para obtener lista de jugadores
+     * - Llama a new Jugador() para crear un nuevo jugador
+     * - Llama a p.agregarJugador() para unir jugador a partida existente
+     * - Llama a notificarObservadores() para notificar evento CAMBIO_TURNO
+     * - Llama a new Partida() para crear una nueva partida
+     * - Llama a p.getId() para obtener el ID de la partida
      */
     @Override
     public IPartida buscarPartida(String nombreJugador) throws RemoteException {
@@ -214,11 +251,61 @@ public class Modelo extends ObservableRemoto implements IModelo, Serializable {
         return nuevaPartida;
     }
 
+    /**
+     * OBTENER PARTIDA POR ID
+     *
+     * Busca y devuelve una partida específica usando su ID único.
+     *
+     * @param id ID único de la partida
+     * @return La partida correspondiente al ID, o null si no existe
+     * @throws RemoteException si hay error de comunicación RMI
+     *
+     * RELACIONES CON OTRAS FUNCIONES:
+     * - Accede al Map partidas usando el método get()
+     *
+     * NOTA: Esta función es llamada frecuentemente por:
+     * - colocarPieza() para obtener la partida antes de colocar una pieza
+     * - moverPieza() para obtener la partida antes de mover una pieza
+     * - eliminarPiezaOponente() para obtener la partida antes de eliminar
+     * - verificarFinDelJuego() para verificar si hay ganador
+     * - hayGanador() para verificar si hay ganador
+     * - getGanador() para obtener el ganador
+     */
     @Override
     public IPartida getPartida(int id) throws RemoteException {
         return partidas.get(id);
     }
 
+    /**
+     * COLOCAR PIEZA EN EL TABLERO
+     *
+     * Permite al jugador actual colocar una pieza en una posición específica del tablero
+     * durante la fase de colocación del juego.
+     *
+     * FLUJO:
+     * 1. Obtiene la partida usando el ID
+     * 2. Intenta colocar la pieza en la posición indicada
+     * 3. Si la colocación fue exitosa:
+     *    a) Si se formó un molino: notifica FORMACION_MOLINO
+     *    b) Si no: notifica PIEZA_COLOCADA y CAMBIO_TURNO
+     *
+     * @param idPartida ID de la partida activa
+     * @param posicion Posición donde colocar la pieza (ej: "A1", "B2", etc.)
+     * @throws RemoteException si hay error de comunicación RMI
+     *
+     * RELACIONES CON OTRAS FUNCIONES:
+     * - Llama a partidas.get(idPartida) para obtener la partida
+     * - Llama a partida.colocarPieza(posicion) para colocar la pieza
+     * - Llama a partida.isEsperandoEliminar() para verificar si se formó un molino
+     * - Llama a notificarObservadores() con evento FORMACION_MOLINO si hay molino
+     * - Llama a notificarObservadores() con evento PIEZA_COLOCADA si no hay molino
+     * - Llama a notificarObservadores() con evento CAMBIO_TURNO para cambiar turno
+     *
+     * EVENTOS QUE GENERA:
+     * - FORMACION_MOLINO: Cuando se forma un molino (3 en línea)
+     * - PIEZA_COLOCADA: Cuando se coloca una pieza sin formar molino
+     * - CAMBIO_TURNO: Para cambiar el turno al otro jugador
+     */
     @Override
     public void colocarPieza(int idPartida, String posicion) throws RemoteException {
         IPartida partida = partidas.get(idPartida);
@@ -235,6 +322,37 @@ public class Modelo extends ObservableRemoto implements IModelo, Serializable {
         }
     }
 
+    /**
+     * MOVER PIEZA EN EL TABLERO
+     *
+     * Permite al jugador actual mover una de sus piezas de una posición a otra
+     * durante la fase de movimiento del juego.
+     *
+     * FLUJO:
+     * 1. Obtiene la partida usando el ID
+     * 2. Intenta mover la pieza desde origen hasta destino
+     * 3. Si el movimiento fue exitoso:
+     *    a) Si se formó un molino: notifica FORMACION_MOLINO
+     *    b) Si no: notifica PIEZA_MOVIDA y CAMBIO_TURNO
+     *
+     * @param idPartida ID de la partida activa
+     * @param origen Posición de origen de la pieza (ej: "A1")
+     * @param destino Posición de destino de la pieza (ej: "A2")
+     * @throws RemoteException si hay error de comunicación RMI
+     *
+     * RELACIONES CON OTRAS FUNCIONES:
+     * - Llama a partidas.get(idPartida) para obtener la partida
+     * - Llama a partida.moverPieza(origen, destino) para mover la pieza
+     * - Llama a partida.isEsperandoEliminar() para verificar si se formó un molino
+     * - Llama a notificarObservadores() con evento FORMACION_MOLINO si hay molino
+     * - Llama a notificarObservadores() con evento PIEZA_MOVIDA si no hay molino
+     * - Llama a notificarObservadores() con evento CAMBIO_TURNO para cambiar turno
+     *
+     * EVENTOS QUE GENERA:
+     * - FORMACION_MOLINO: Cuando el movimiento forma un molino (3 en línea)
+     * - PIEZA_MOVIDA: Cuando se mueve una pieza sin formar molino
+     * - CAMBIO_TURNO: Para cambiar el turno al otro jugador
+     */
     @Override
     public void moverPieza(int idPartida, String origen, String destino) throws RemoteException {
         IPartida partida = partidas.get(idPartida);
@@ -251,6 +369,42 @@ public class Modelo extends ObservableRemoto implements IModelo, Serializable {
         }
     }
 
+    /**
+     * ELIMINAR PIEZA DEL OPONENTE
+     *
+     * Permite al jugador actual eliminar una pieza del oponente después de
+     * haber formado un molino (3 en línea).
+     *
+     * FLUJO:
+     * 1. Obtiene la partida usando el ID
+     * 2. Intenta eliminar la pieza del oponente en la posición indicada
+     * 3. Si la eliminación fue exitosa:
+     *    a) Notifica PIEZA_ELIMINADA
+     *    b) Verifica si hay un ganador:
+     *       - Si hay ganador: actualiza el ranking y notifica GAME_WIN
+     *       - Si no hay ganador: notifica CAMBIO_TURNO
+     *
+     * @param idPartida ID de la partida activa
+     * @param posicion Posición de la pieza del oponente a eliminar (ej: "B3")
+     * @throws RemoteException si hay error de comunicación RMI
+     *
+     * RELACIONES CON OTRAS FUNCIONES:
+     * - Llama a partidas.get(idPartida) para obtener la partida
+     * - Llama a partida.eliminarPiezaOponente(posicion) para eliminar la pieza
+     * - Llama a notificarObservadores() con evento PIEZA_ELIMINADA
+     * - Llama a partida.hayGanador() para verificar si hay ganador
+     * - Si hay ganador:
+     *   - Llama a partida.getGanador() para obtener el jugador ganador
+     *   - Llama a ranking.actualizar() para incrementar victorias del ganador
+     *   - Llama a notificarObservadores() con evento GAME_WIN
+     * - Si no hay ganador:
+     *   - Llama a notificarObservadores() con evento CAMBIO_TURNO
+     *
+     * EVENTOS QUE GENERA:
+     * - PIEZA_ELIMINADA: Siempre que se elimina una pieza
+     * - GAME_WIN: Cuando hay un ganador (oponente quedó con menos de 3 piezas)
+     * - CAMBIO_TURNO: Cuando no hay ganador y continúa el juego
+     */
     @Override
     public void eliminarPiezaOponente(int idPartida, String posicion) throws RemoteException {
         IPartida partida = partidas.get(idPartida);
@@ -273,29 +427,108 @@ public class Modelo extends ObservableRemoto implements IModelo, Serializable {
         }
     }
 
+    /**
+     * VERIFICAR SI EL JUEGO HA TERMINADO
+     *
+     * Verifica si la partida especificada ha finalizado (hay un ganador).
+     *
+     * @param id ID de la partida a verificar
+     * @return true si la partida terminó (hay ganador), false en caso contrario
+     * @throws RemoteException si hay error de comunicación RMI
+     *
+     * RELACIONES CON OTRAS FUNCIONES:
+     * - Llama a partidas.get(id) para obtener la partida
+     * - Llama a partida.hayGanador() para verificar si hay ganador
+     *
+     * NOTA: Esta función es equivalente a hayGanador() y ambas delegan
+     * la verificación a partida.hayGanador()
+     */
     @Override
     public boolean verificarFinDelJuego(int id) throws RemoteException {
         IPartida partida = partidas.get(id);
         return partida != null && partida.hayGanador();
     }
 
+    /**
+     * VERIFICAR SI HAY GANADOR
+     *
+     * Verifica si la partida especificada tiene un ganador.
+     *
+     * @param id ID de la partida a verificar
+     * @return true si hay un ganador, false en caso contrario
+     * @throws RemoteException si hay error de comunicación RMI
+     *
+     * RELACIONES CON OTRAS FUNCIONES:
+     * - Llama a partidas.get(id) para obtener la partida
+     * - Llama a partida.hayGanador() para verificar si hay ganador
+     *
+     * NOTA: Esta función es equivalente a verificarFinDelJuego() y ambas
+     * delegan la verificación a partida.hayGanador()
+     */
     @Override
     public boolean hayGanador(int id) throws RemoteException {
         IPartida partida = partidas.get(id);
         return partida != null && partida.hayGanador();
     }
 
+    /**
+     * OBTENER GANADOR DE LA PARTIDA
+     *
+     * Devuelve el jugador ganador de la partida especificada.
+     *
+     * @param id ID de la partida
+     * @return El jugador ganador, o null si no hay ganador o no existe la partida
+     * @throws RemoteException si hay error de comunicación RMI
+     *
+     * RELACIONES CON OTRAS FUNCIONES:
+     * - Llama a partidas.get(id) para obtener la partida
+     * - Llama a partida.getGanador() para obtener el jugador ganador
+     *
+     * NOTA: Debe llamarse después de verificar que hayGanador() retorna true
+     */
     @Override
     public IJugador getGanador(int id) throws RemoteException {
         IPartida partida = partidas.get(id);
         return partida != null ? partida.getGanador() : null;
     }
 
+    /**
+     * OBTENER RANKING DE JUGADORES
+     *
+     * Devuelve el ranking completo con las puntuaciones de todos los jugadores.
+     *
+     * @return Map con nombres de jugadores y sus victorias
+     *         Estructura: Map<NombreJugador, NumeroDeVictorias>
+     * @throws RemoteException si hay error de comunicación RMI
+     *
+     * RELACIONES CON OTRAS FUNCIONES:
+     * - Llama a ranking.getRanking() para obtener el mapa de puntuaciones
+     *
+     * NOTA: El ranking se actualiza automáticamente cada vez que termina
+     * una partida (ver eliminarPiezaOponente() que llama a ranking.actualizar())
+     */
     @Override
     public Map<String, Integer> getRanking() throws RemoteException {
         return ranking.getRanking();
     }
 
+    /**
+     * ACTUALIZAR RANKING DE UN JUGADOR
+     *
+     * Incrementa en 1 el número de victorias del jugador especificado en el ranking.
+     * Si el jugador no existe en el ranking, lo crea con 1 victoria.
+     *
+     * @param nombreJugador Nombre del jugador cuyo ranking se actualizará
+     * @throws RemoteException si hay error de comunicación RMI
+     *
+     * RELACIONES CON OTRAS FUNCIONES:
+     * - Llama a ranking.actualizar(nombreJugador) para incrementar victorias
+     *
+     * NOTA: Esta función es llamada automáticamente por:
+     * - eliminarPiezaOponente() cuando detecta un ganador
+     *
+     * El ranking se persiste automáticamente en el archivo ranking.dat
+     */
     @Override
     public void actualizarRanking(String nombreJugador) throws RemoteException {
         ranking.actualizar(nombreJugador);

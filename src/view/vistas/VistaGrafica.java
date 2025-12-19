@@ -119,6 +119,8 @@ public class VistaGrafica implements IVista {
      */
     private VentanaConsola ventanaConsola;
 
+    //esto podria refactorizarlos como Ivista para aplicar principios de poo pero ya esta
+
     /**
      * CONSTRUCTOR
      *

@@ -1,12 +1,12 @@
 package model.enums;
 
 /**
- * Enumeración que representa los diferentes estados de la interfaz de usuario
+ * ESTADOS DE LA INTERFAZ DE USUARIO
+ * Define los diferentes estados en los que puede estar la interfaz del cliente.
+ * RELACIONES: Usado por la vista para controlar qué pantalla mostrar.
  */
 public enum Estados {
-    EN_MENU,
-    EN_ESPERANDO_JUGADORES,
-    EN_JUEGO,
-    EN_RANKING,
-    EN_OPCIONES
+    EN_MENU,                    // Pantalla del menú principal
+    EN_ESPERANDO_JUGADORES,     // Esperando que otro jugador se una
+    EN_JUEGO                    // En una partida activa
 }
